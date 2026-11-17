@@ -1,0 +1,46 @@
+pkgname=glide-text
+pkgver=0.1.r0.g0000000
+pkgrel=1
+pkgdesc="Text editor of the Glide desktop"
+arch=(x86_64)
+url="https://github.com/Glide-Desktop/glide-text"
+license=(GPL-3.0-or-later)
+depends=(
+    glibc gcc-libs libglvnd vulkan-icd-loader wayland libxkbcommon hicolor-icon-theme
+    glide-configd dbus xdg-utils
+)
+optdepends=(
+    'xdg-desktop-portal-glide: Open and Save dialogs'
+    'glide-files: Show in Files'
+)
+makedepends=(git cargo pkgconf)
+options=(!lto !debug)
+_git="${GLIDE_GIT:-https://github.com/Glide-Desktop}"
+_target="${GLIDE_CARGO_TARGET:-target}"
+source=("$pkgname::git+$_git/glide-text.git")
+sha256sums=('SKIP')
+
+pkgver() {
+    cd "$pkgname"
+    printf '0.1.r%s.g%s' "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+}
+
+prepare() {
+    cd "$pkgname"
+    export RUSTUP_TOOLCHAIN=stable
+    cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+    cd "$pkgname"
+    export RUSTUP_TOOLCHAIN=stable CARGO_TARGET_DIR="$_target"
+    cargo build --frozen --release -p glide-text
+}
+
+package() {
+    cd "$pkgname"
+    install -Dm755 $_target/release/glide-text "$pkgdir/usr/bin/glide-text"
+    install -Dm644 data/glide-text.desktop "$pkgdir/usr/share/applications/glide-text.desktop"
+    install -Dm644 data/defaults/text.json "$pkgdir/usr/share/glide/defaults/text.json"
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
