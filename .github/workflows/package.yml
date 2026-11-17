@@ -1,0 +1,56 @@
+name: Package
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - name: Tools
+        run: |
+          pacman -Syu --noconfirm --needed git rust pkgconf github-cli \
+            seatd systemd-libs libinput mesa libglvnd libxkbcommon libdisplay-info wayland dbus pam sqlite \
+            gstreamer gst-plugins-base gst-plugins-base-libs gst-plugins-bad-libs
+          useradd -m builder
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          # makepkg clones this checkout and builds its origin/HEAD, which a
+          # detached tag checkout does not have.
+          git checkout -q -B build
+          chown -R builder "$GITHUB_WORKSPACE"
+          parent="$(dirname "$GITHUB_WORKSPACE")"
+          for dir in data/arch/*/; do
+            (cd "$dir" && sudo -u builder env GLIDE_GIT="file://$parent" makepkg -d -f --noconfirm)
+          done
+          mkdir -p out
+          cp data/arch/*/*.pkg.tar.zst out/
+          ls -l out
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 ||
+            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes "Arch packages built from $GITHUB_REF_NAME."
+          gh release upload "$GITHUB_REF_NAME" out/*.pkg.tar.zst --clobber
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        with:
+          name: packages
+          path: out/*.pkg.tar.zst
