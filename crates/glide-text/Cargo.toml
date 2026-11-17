@@ -30,9 +30,9 @@ iced = { version = "0.14.0", default-features = false, features = [
     "advanced",
     "markdown",
 ] }
-glide-app = { path = "../glide-app" }
-glide-config = { path = "../glide-config" }
-glide-sdk = { path = "../glide-sdk" }
+glide-app.workspace = true
+glide-config.workspace = true
+glide-sdk.workspace = true
 regex = "1"
 serde.workspace = true
 serde_json.workspace = true

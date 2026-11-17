@@ -1,0 +1,52 @@
+[workspace]
+resolver = "3"
+members = ["crates/glide-text"]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.96"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/Glide-Desktop/glide-text"
+
+[profile.release]
+debug = "line-tables-only"
+lto = "thin"
+
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
+
+[workspace.dependencies]
+glide-app = { git = "https://github.com/Glide-Desktop/glide-libs", tag = "v0.1.0" }
+glide-config = { git = "https://github.com/Glide-Desktop/glide-libs", tag = "v0.1.0" }
+glide-sdk = { git = "https://github.com/Glide-Desktop/glide-libs", tag = "v0.1.0" }
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
+bitflags = "2.2.1"
+thiserror = "2.0"
+anyhow = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "1"
+zbus = "5"
+
+[workspace.lints.rust]
+future-incompatible = "warn"
+nonstandard_style = { level = "deny", priority = -1 }
+unsafe_op_in_unsafe_fn = "deny"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = 10 }
+redundant_clone = { level = "deny", priority = 9 }
+manual_while_let_some = { level = "deny", priority = 4 }
+pedantic = { level = "warn", priority = 3 }
+missing_errors_doc = { level = "allow", priority = 4 }
+missing_panics_doc = { level = "allow", priority = 4 }
+cast_possible_truncation = { level = "allow", priority = 4 }
+cast_precision_loss = { level = "allow", priority = 4 }
+cast_sign_loss = { level = "allow", priority = 4 }
+cast_possible_wrap = { level = "allow", priority = 4 }
+cast_lossless = { level = "allow", priority = 4 }
+float_cmp = { level = "allow", priority = 4 }
