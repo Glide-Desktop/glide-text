@@ -30,6 +30,10 @@ jobs:
           # makepkg clones this checkout and builds its origin/HEAD, which a
           # detached tag checkout does not have.
           git checkout -q -B build
+          version="$(sed -n '/^\[workspace.package\]/,/^\[/s/^version = "\(.*\)"/\1/p' Cargo.toml)"
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match the Cargo version v$version"; exit 1
+          fi
           chown -R builder "$GITHUB_WORKSPACE"
           parent="$(dirname "$GITHUB_WORKSPACE")"
           for dir in data/arch/*/; do
